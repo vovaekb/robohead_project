@@ -3,6 +3,7 @@ import cv2
 import os
 from contextlib import contextmanager
 
+
 image_extensions = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.pbm', '.pgm', '.ppm']
 
 def splitfn(fn):
@@ -56,8 +57,20 @@ def mtx2rvec(R):
     return axis * np.arctan2(s, c)
 
 def draw_str(dst, (x, y), s):
-    cv2.putText(dst, s, (x+1, y+1), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 0, 0), thickness = 2, linetype=cv2.CV_AA)
-    cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), linetype=cv2.CV_AA)
+    cv2.putText(
+        dst, s, (x+1, y+1),
+        cv2.FONT_HERSHEY_PLAIN,
+        1.0, (0, 0, 0),
+        thickness = 2,
+        linetype=cv2.CV_AA
+    )
+    cv2.putText(
+        dst, s,
+        (x, y),
+        cv2.FONT_HERSHEY_PLAIN,
+        1.0, (255, 255, 255),
+        linetype=cv2.CV_AA
+    )
 
 class Sketcher:
     def __init__(self, windowname, dests, colors_func):
@@ -87,12 +100,14 @@ class Sketcher:
 
 
 # palette data from matplotlib/_cm.py
-_jet_data =   {'red':   ((0., 0, 0), (0.35, 0, 0), (0.66, 1, 1), (0.89,1, 1),
-                         (1, 0.5, 0.5)),
-               'green': ((0., 0, 0), (0.125,0, 0), (0.375,1, 1), (0.64,1, 1),
-                         (0.91,0,0), (1, 0, 0)),
-               'blue':  ((0., 0.5, 0.5), (0.11, 1, 1), (0.34, 1, 1), (0.65,0, 0),
-                         (1, 0, 0))}
+_jet_data = {
+    'red': ((0., 0, 0), (0.35, 0, 0), (0.66, 1, 1), (0.89,1, 1),
+    (1, 0.5, 0.5)),
+    'green': ((0., 0, 0), (0.125,0, 0), (0.375,1, 1), (0.64,1, 1),
+    (0.91,0,0), (1, 0, 0)),
+    'blue':  ((0., 0.5, 0.5), (0.11, 1, 1), (0.34, 1, 1), (0.65,0, 0),
+    (1, 0, 0))
+}
 
 cmap_data = { 'jet' : _jet_data }
 
@@ -126,13 +141,15 @@ def Timer(msg):
     finally:
         print "%.2f ms" % ((clock()-start)*1000)
 
-class RectSelector:
+
+class RectangleSelector:
     def __init__(self, win, callback):
         self.win = win
         self.callback = callback
         cv2.setMouseCallback(win, self.onmouse)
         self.drag_start = None
         self.drag_rect = None
+
     def onmouse(self, event, x, y, flags, param):
         x, y = np.int16([x, y]) # BUG
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -154,8 +171,15 @@ class RectSelector:
                 self.drag_rect = None
                 if rect:
                     self.callback(rect)
+
     def draw(self, vis):
         if not self.drag_rect:
             return
         x0, y0, x1, y1 = self.drag_rect
-        cv2.rectangle(vis, (x0, y0), (x1, y1), (0, 255, 0), 2)
+        cv2.rectangle(
+            vis,
+            (x0, y0),
+            (x1, y1),
+            (0, 255, 0),
+            2
+        )

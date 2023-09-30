@@ -4,6 +4,7 @@ from time import clock
 from numpy import pi, sin, cos
 import common
 
+
 class VideoSynthBase(object):
     def __init__(self, size=None, noise=0.0, bg = None, **params):
         self.bg = None
@@ -16,7 +17,9 @@ class VideoSynthBase(object):
         if size is not None:
             w, h = map(int, size.split('x'))
             self.frame_size = (w, h)
-            self.bg = cv2.resize(self.bg, self.frame_size)
+            self.bg = cv2.resize(
+                self.bg, self.frame_size
+            )
 
         self.noise = float(noise)
 
@@ -35,12 +38,21 @@ class VideoSynthBase(object):
 
         if self.noise > 0.0:
             noise = np.zeros((h, w, 3), np.int8)
-            cv2.randn(noise, np.zeros(3), np.ones(3)*255*self.noise)
-            buf = cv2.add(buf, noise, dtype=cv2.CV_8UC3)
+            cv2.randn(
+                noise,
+                np.zeros(3),
+                np.ones(3)*255*self.noise
+            )
+            buf = cv2.add(
+                buf,
+                noise,
+                dtype=cv2.CV_8UC3
+            )
         return True, buf
 
     def isOpened(self):
         return True
+
 
 class Chess(VideoSynthBase):
     def __init__(self, **kw):
@@ -66,10 +78,21 @@ class Chess(VideoSynthBase):
         self.t = 0
 
     def draw_quads(self, img, quads, color = (0, 255, 0)):
-        img_quads = cv2.projectPoints(quads.reshape(-1, 3), self.rvec, self.tvec, self.K, self.dist_coef) [0]
+        img_quads = cv2.projectPoints(
+            quads.reshape(-1, 3),
+            self.rvec,
+            self.tvec,
+            self.K,
+            self.dist_coef
+        ) [0]
         img_quads.shape = quads.shape[:2] + (2,) 
         for q in img_quads:
-            cv2.fillConvexPoly(img, np.int32(q*4), color, cv2.CV_AA, shift=2)
+            cv2.fillConvexPoly(
+                img, np.int32(q*4),
+                color,
+                cv2.CV_AA,
+                shift=2
+            )
 
     def render(self, dst):
         t = self.t
@@ -117,15 +140,21 @@ def create_capture(source = 0, fallback = presets['chess']):
     
     cap = None
     if source == 'synth':
-        Class = classes.get(params.get('class', None), VideoSynthBase)
+        Class = classes.get(
+            params.get('class', None), VideoSynthBase
+        )
         try: cap = Class(**params)
         except: pass
     else:
         cap = cv2.VideoCapture(source)
         if 'size' in params:
             w, h = map(int, params['size'].split('x'))
-            cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, w)
-            cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, h)
+            cap.set(
+                cv2.cv.CV_CAP_PROP_FRAME_WIDTH, w
+            )
+            cap.set(
+                cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, h
+            )
     if cap is None or not cap.isOpened():
         print 'Warning: unable to open video source: ', source
         if fallback is not None:

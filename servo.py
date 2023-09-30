@@ -1,5 +1,5 @@
 import serial
-import sys
+
 
 MODE_256 = 0
 MODE_QUARTER = 1
@@ -35,8 +35,7 @@ class Servo:
         if self.mode == MODE_256:
             pos = int( 254 * angle/90.0 )
             bud=chr(0xFF)+chr(n)+chr(pos)
-
-        elif mode == MODE_QUARTER:
+        elif self.mode == MODE_QUARTER:
             pos = int( 1000 * angle/90.0 ) + 1000
             lo = pos & 0x7F
             hi = ( pos >> 7 ) & 0x7F

@@ -4,7 +4,7 @@ from optparse import OptionParser
 import math
 import datetime
 import serial
-#
+
 from threading import Thread
 import cv2.cv as cv
 import cv2
@@ -29,11 +29,30 @@ image_scale = 2
 haar_scale = 1.2
 min_neighbors = 2
 haar_flags = 0
+
+COM = 'COM4'
+
+MORPH_ON = 1
+HOUGH_ON = 1
+SERVO_ON = 1
+BLUR_ON = 1
+SHOW_MAIN = 1
+SHOW_PATH = 0
+SHOW_THRESH = 0
+FLIP = 1
+
+COLOR_RANGE={
+    'ball_light': (np.array((20, 70, 170), np.uint8), np.array((40, 170, 255), np.uint8)),
+    'ball_dark': (np.array((0, 170, 120), np.uint8), np.array((20, 240, 255), np.uint8)),
+}
+
  
 def detect_and_draw(img, cascade):
     gray = cv.CreateImage((img.width,img.height), 8, 1)
-    small_img = cv.CreateImage((cv.Round(img.width / image_scale),
-                   cv.Round (img.height / image_scale)), 8, 1)
+    small_img = cv.CreateImage(
+        (cv.Round(img.width / image_scale),
+        cv.Round (img.height / image_scale)), 8, 1
+    )
  
     # convert color input image to grayscale
     cv.CvtColor(img, gray, cv.CV_BGR2GRAY)
@@ -48,8 +67,10 @@ def detect_and_draw(img, cascade):
     if(cascade):
         t = cv.GetTickCount()
         # HaarDetectObjects takes 0.02s
-        faces = cv.HaarDetectObjects(small_img, cascade, cv.CreateMemStorage(0),
-                                     haar_scale, min_neighbors, haar_flags, min_size)
+        faces = cv.HaarDetectObjects(
+            small_img, cascade, cv.CreateMemStorage(0),
+            haar_scale, min_neighbors, haar_flags, min_size
+        )
         t = cv.GetTickCount() - t
         if faces:
             for ((x, y, w, h), n) in faces:
@@ -98,26 +119,6 @@ def get_delta(loc, span, max_delta, centre_tolerance):
         if is_neg:
             delta = delta * -1
     return delta
-#
-
-
-COM = 'COM4' # 'COM4'
-
-MORPH_ON = 1
-HOUGH_ON = 1
-SERVO_ON = 1
-BLUR_ON = 1
-SHOW_MAIN = 1
-SHOW_PATH = 0
-SHOW_THRESH = 0
-FLIP = 1
-
-COLOR_RANGE={
-#    'ball_light': (np.array((8, 40, 190), np.uint8), np.array((180, 255, 255), np.uint8)),
-    'ball_light': (np.array((20, 70, 170), np.uint8), np.array((40, 170, 255), np.uint8)),
-#    'ball_dark': (np.array((0, 170, 200), np.uint8), np.array((180, 255, 255), np.uint8)),
-    'ball_dark': (np.array((0, 170, 120), np.uint8), np.array((20, 240, 255), np.uint8)),
-}
 
 def nothing( *arg ):
     pass
@@ -164,10 +165,18 @@ class Tracker(Thread):
         thresh = cv2.bitwise_or(thresh, thresh_2)
 
         if MORPH_ON:
-            st1 = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 21), (10, 10))
-            st2 = cv2.getStructuringElement(cv2.MORPH_RECT, (11, 11), (5, 5))
-            thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, st1) 
-            thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, st2) 
+            st1 = cv2.getStructuringElement(
+                cv2.MORPH_RECT, (21, 21), (10, 10)
+            )
+            st2 = cv2.getStructuringElement(
+                cv2.MORPH_RECT, (11, 11), (5, 5)
+            )
+            thresh = cv2.morphologyEx(
+                thresh, cv2.MORPH_CLOSE, st1
+            )
+            thresh = cv2.morphologyEx(
+                thresh, cv2.MORPH_OPEN, st2
+            )
 
         if BLUR_ON:    
             thresh = cv2.GaussianBlur(thresh, (5, 5), 2)
@@ -232,7 +241,12 @@ class Tracker(Thread):
 if __name__ == '__main__':
 # parse cmd line options, setup Haar classifier
     parser = OptionParser(usage = "usage: %prog [options] [camera_index]")
-    parser.add_option("-c", "--cascade", action="store", dest="cascade", type="str", help="Haar cascade file, default %default", default = "/home/vladimir/OpenCV/opencv-2.4.7/data/haarcascades/haarcascade_frontalface_alt.xml")
+    parser.add_option("-c", "--cascade",
+                      action="store",
+                      dest="cascade",
+                      type="str",
+                      help="Haar cascade file, default %default",
+                      default = "/home/vladimir/OpenCV/opencv-2.4.7/data/haarcascades/haarcascade_frontalface_alt.xml")
     (options, args) = parser.parse_args()
  
     cascade = cv.Load(options.cascade)
@@ -243,7 +257,9 @@ if __name__ == '__main__':
  
     input_name = args[0]
     if input_name.isdigit():
-        capture = cv.CreateCameraCapture(int(input_name))
+        capture = cv.CreateCameraCapture(
+            int(input_name)
+        )
     else:
         print "We need a camera input! Specify camera index e.g. 0"
         sys.exit(0)
@@ -259,8 +275,10 @@ if __name__ == '__main__':
                 cv.WaitKey(0)
                 break
             if not frame_copy:
-                frame_copy = cv.CreateImage((frame.width,frame.height),
-                                            cv.IPL_DEPTH_8U, frame.nChannels)
+                frame_copy = cv.CreateImage(
+                    (frame.width,frame.height),
+                    cv.IPL_DEPTH_8U, frame.nChannels
+                )
             if frame.origin == cv.IPL_ORIGIN_TL:
                 cv.Copy(frame, frame_copy)
             else:
@@ -295,45 +313,8 @@ if __name__ == '__main__':
  
     cv.DestroyWindow("result")
 
+    if SERVO_ON:
+       sctrl = Servo( com=COM )
+       sctrl.setpos(0,45)
+       sctrl.setpos(1,45)
 
-    #if SHOW_MAIN:
-    #	cv2.namedWindow( "result", cv.CV_WINDOW_AUTOSIZE )
-    #green = Tracker('ball_light', 'ball_dark', SHOW_THRESH)
-    #green.start()
-
-    #if SERVO_ON:  - uncomment this
-    #    sctrl = Servo( com=COM )
-    #    sctrl.setpos(0,45)
-    #    sctrl.setpos(1,45)
-
-"""
-    cap = video.create_capture(0) #1) - uncomment this
-    flag, img = cap.read()
-    green.path = createPath(img)
-
-    while True:
-        flag, img = cap.read()
-        try:
-            green.poll(img)
-        except:
-            cap = None
-            green = None
-            if SERVO_ON:
-                sctrl.stop()
-            raise
-            
-        green.join()
-
-        ch = cv2.waitKey(5)
-        if ch == 27:
-            break
-
-    #if SERVO_ON:
-    #    sctrl.setpos(0,45)
-    #    sctrl.setpos(1,45)         
-    #    sctrl.stop()
-
-    green = None
-    cap = None
-    cv2.destroyAllWindows()
-""" 			

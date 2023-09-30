@@ -108,7 +108,14 @@ if __name__ == '__main__':
  
     # parse cmd line options, setup Haar classifier
     parser = OptionParser(usage = "usage: %prog [options] [camera_index]")
-    parser.add_option("-c", "--cascade", action="store", dest="cascade", type="str", help="Haar cascade file, default %default", default = "/home/vladimir/OpenCV/opencv-2.4.7/data/haarcascades/haarcascade_frontalface_alt.xml")
+    parser.add_option(
+        "-c", "--cascade",
+        action="store",
+        dest="cascade",
+        type="str",
+        help="Haar cascade file, default %default",
+        default = "/home/vladimir/OpenCV/opencv-2.4.7/data/haarcascades/haarcascade_frontalface_alt.xml"
+    )
     (options, args) = parser.parse_args()
  
     cascade = cv.Load(options.cascade)
@@ -135,8 +142,10 @@ if __name__ == '__main__':
                 cv.WaitKey(0)
                 break
             if not frame_copy:
-                frame_copy = cv.CreateImage((frame.width,frame.height),
-                                            cv.IPL_DEPTH_8U, frame.nChannels)
+                frame_copy = cv.CreateImage(
+                    (frame.width,frame.height),
+                    cv.IPL_DEPTH_8U, frame.nChannels
+                )
             if frame.origin == cv.IPL_ORIGIN_TL:
                 cv.Copy(frame, frame_copy)
             else:
